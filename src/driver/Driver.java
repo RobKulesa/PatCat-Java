@@ -1,20 +1,24 @@
 package driver;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 
 import engine.Engine;
 
 public class Driver {
 	public static void main(String[] args) {
 		Engine engine = new Engine();
-		String fileName = "keyword.W+Qa.csv";
-		try {
-			engine.fillCategories(fileName);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		String categories = "keyword.W+Qa.csv";
+		String files = "W+Q_TAC.csv";
+		
+		try { 
+			engine.fillCategories(categories); 
+			engine.loadFromDocument(files); 
+		} catch (IOException e) {
+			e.printStackTrace(); 
 		}
+		 
+		
 		
 		/*try {
 			Scanner sc = new Scanner(new File(fileName));

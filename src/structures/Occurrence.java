@@ -3,20 +3,20 @@ package structures;
 import java.util.ArrayList;
 
 public class Occurrence {
-	private String patentFile;
+	private String patent;
 	private int score;
-	public final int TITLE = 5;
-	public final int ABSTRACT = 2;
-	public final int CLAIM = 1;
+	public static final int TITLE = 5;
+	public static final int ABSTRACT = 2;
+	public static final int CLAIM = 1;
 	
-	public Occurrence(String patentFile, int score) {
-		this.patentFile = patentFile;
+	public Occurrence(String patent, int score) {
+		this.patent = patent;
 		this.score = score;
 	}
 	
 	@Override
 	public String toString() {
-		return "(" + this.patentFile + ", " + this.score + ")";
+		return "(" + this.patent + ", " + this.score + ")";
 	}
 	
 	public int getScore() {
@@ -24,6 +24,9 @@ public class Occurrence {
 	}
 	
 	public String getFile() {
-		return this.patentFile;
+		return this.patent;
+	}
+	public void addScore(int score) {
+		this.score = score;
 	}
 }
