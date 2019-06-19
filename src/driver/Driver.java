@@ -9,11 +9,10 @@ public class Driver {
 	public static void main(String[] args) {
 		Engine engine = new Engine();
 		String categories = "keyword.W+Qa.csv";
-		String files = "W+Q_TAC.csv";
+		String patents = "W+Q_TAC.csv";
 		
 		try { 
-			engine.fillCategories(categories); 
-			engine.loadFromDocument(files); 
+			engine.makeIndex(categories, patents);
 		} catch (IOException e) {
 			e.printStackTrace(); 
 		}
