@@ -7,9 +7,10 @@ import engine.Engine;
 
 public class Driver {
 	public static void main(String[] args) {
+		Config config = new Config();
 		Engine engine = new Engine();
-		String categories = "keyword.W+Qa.csv";
-		String patents = "W+Q_TAC.csv";
+		String categories = config.getProperty("categoriesFile");
+		String patents = config.getProperty("patentsFile");
 		
 		try { 
 			engine.makeIndex(categories, patents);

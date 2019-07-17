@@ -2,13 +2,16 @@ package structures;
 
 import java.util.ArrayList;
 
-public class Occurrence implements Comparable{
+import driver.Config;
+
+public class Occurrence implements Comparable {
+	Config config = new Config();
 	private String patent;
 	private int[] score;
 	//
-	public static final int TITLE = 10;
-	public static final int ABSTRACT = 5;
-	public static final int CLAIM = 1;
+	public final int TITLE = Integer.parseInt(config.getProperty("titleWeight"));
+	public final int ABSTRACT = Integer.parseInt(config.getProperty("abstractWeight"));
+	public final int CLAIM = Integer.parseInt(config.getProperty("claimWeight"));
 	
 	public Occurrence(String patent, int[] score) {
 		this.patent = patent;
@@ -17,7 +20,7 @@ public class Occurrence implements Comparable{
 	
 	@Override
 	public String toString() {
-		return "(" + this.patent + ", [" + this.getFrequency(0) + ", " + this.getFrequency(1) + ", " + this.getFrequency(2) + "])";
+		return "(" + this.patent + ", [" + this.getFrequency(0) + ", " + this.getFrequency(1) +  "," + this.getFrequency(3) + "])";
 	}
 	
 	public int getScore() {
