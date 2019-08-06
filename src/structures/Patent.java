@@ -1,7 +1,11 @@
 package structures;
 
 import java.util.ArrayList;
-
+/**
+ * 
+ * @author Robert Kulesa
+ *
+ */
 public class Patent {
 	private String file;
 	private String title;
@@ -83,7 +87,11 @@ public class Patent {
 	public String getClaim() {
 		return this.claim;
 	}
-	
+
+	@Override
+	/**
+	 * @return Returns a String formatted patent object showing its main category, score, and secondary category
+	 */
 	public String toString() {
 		return this.file + ": " + this.category + " (" + this.score + ") (" + this.secondary + ")";
 	}

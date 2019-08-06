@@ -1,8 +1,15 @@
 package driver;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.*;
-
+/**
+ *
+ * @author Robert Kulesa
+ *
+ */
 public class Config {
 	Properties config;
 	public Config() {
@@ -13,8 +20,21 @@ public class Config {
 			e.printStackTrace();
 		} 
 	}
-	
+	/**
+	 * 
+	 * @param key
+	 * @return configured property
+	 */
 	public String getProperty(String key) {
 		return this.config.getProperty(key);
+	}
+	
+	public void setProperty(String key, String value) {
+		this.config.setProperty(key, value);
+		try {
+			this.config.store(new FileOutputStream("config.cfg"), null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
 	}
 }

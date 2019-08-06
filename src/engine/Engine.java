@@ -1,6 +1,7 @@
 package engine;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.commons.csv.CSVFormat;
@@ -8,10 +9,13 @@ import org.apache.commons.csv.CSVRecord;
 
 import com.opencsv.CSVWriter;
 
+import driver.Driver;
 import structures.*;
 //12:00 - 1:00 am
 //11:30 - 3 pm
 //10:45 - 12:22 am
+//8/1 10:00pm - 11pm
+//8/5 10:00pm - 1:00 am
 
 public class Engine {
 	private final int TITLE = 0;
@@ -24,24 +28,30 @@ public class Engine {
 		masterIndex = new HashMap<ArrayList<String>, ArrayList<Occurrence>>(1000,2.0f);
 		categories = new HashMap<ArrayList<String>, ArrayList<Integer>>(20,2.0f);
 	}
-	
+	/**
+	 * Fills category index with occurrences, fills categories of patents, and exports into a csv file
+	 * @param keywordsFile 
+	 * @param patentFile
+	 */
 	public void makeIndex(String keywordsFile, String patentFile) throws IOException {
 		fillCategories(keywordsFile);
+		Driver.addText("fillCategories finished");
 		ArrayList<Patent> patents = loadPatents(patentFile);
+		Driver.addText("loadPatents finished");
 		for(Patent patent : patents) {
-			mergeIndex(loadFromDocument(patent)); 
+			mergeIndex(loadFromPatent(patent)); 
 		}
-		
-		//for(ArrayList<String> key : masterIndex.keySet()) {
-			//System.out.print(key + " = " + masterIndex.get(key) + "\n");
-		//}
+		Driver.addText("mergeIndex finished");
 		patents = insertCategories(patents);
-		for(Patent patent : patents) {
-			System.out.println(patent);
-		}
-		export("output.csv", patents);
+		Driver.addText("insertCategories finished");
+		SimpleDateFormat format = new SimpleDateFormat("MM-dd-yy.HH.mm.ss");
+		export("output" + format.format(System.currentTimeMillis()) +".csv", patents);
+		Driver.addText("export finished");
 	}
-	
+	/**
+	 * Fills categories hash table with keywords and weights from csv file
+	 * @param fileName
+	 */
 	public void fillCategories(String fileName) throws IOException {
 		Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(new FileReader(fileName));
 		ArrayList<String> keywords = new ArrayList<String>();
@@ -52,7 +62,6 @@ public class Engine {
 			while(iterator.hasNext()) {
 				data = iterator.next().toLowerCase();
 				if(data.length() > 0) {
-					//System.out.println(data);
 					if(data.matches(".*\\d.*")) {
 						weights.add(Integer.parseInt(data));
 					} else {
@@ -66,9 +75,12 @@ public class Engine {
 				weights = new ArrayList<Integer>();
 			}
 		}
-		//System.out.println(categories);
 	}
-	
+	/**
+	 * Loads patents from patents csv file and creates patent objects
+	 * @param fileName
+	 * @return patents
+	 */
 	public ArrayList<Patent> loadPatents(String fileName) throws IOException {
 		ArrayList<Patent> patents = new ArrayList<Patent>();
 		Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new FileReader(fileName));
@@ -79,11 +91,14 @@ public class Engine {
 			String claim = record.get("Claims").toLowerCase();
 			patents.add(new Patent(file, title, abstractInfo, claim));
 		}
-		//System.out.println(patents);
 		return patents;
 	}
-	
-	public HashMap<ArrayList<String>, Occurrence> loadFromDocument(Patent patent) throws IOException {
+	/**
+	 * Builds master index and fills with occurrence objects using {@link engine.Engine#buildMap(Patent, int, StringTokenizer, HashMap)}
+	 * @param patent
+	 * @return HashMap of occurrences
+	 */
+	public HashMap<ArrayList<String>, Occurrence> loadFromPatent(Patent patent) throws IOException {
 		HashMap<ArrayList<String>, Occurrence> map = new HashMap<ArrayList<String>, Occurrence>(500, 2.0f);
 		
 		map = buildMap(patent, TITLE, new StringTokenizer(patent.getTitle()), map);
@@ -91,7 +106,14 @@ public class Engine {
 		map = buildMap(patent, CLAIM, new StringTokenizer(patent.getClaim()), map);
 		return map;
 	}
-	
+	/**
+	 * Builds HashMap of occurrences for each patent
+	 * @param patent
+	 * @param idx TITLE, ABSTRACT, or CLAIM [0, 1, 2]
+	 * @param tk StringTokenizer for patent description
+	 * @param map 
+	 * @return
+	 */
 	public HashMap<ArrayList<String>, Occurrence> buildMap(Patent patent, int idx, StringTokenizer tk, HashMap<ArrayList<String>, Occurrence> map) {
 		ArrayList<String> keywords;
 		while(tk.hasMoreTokens()) {
@@ -105,7 +127,6 @@ public class Engine {
 							if(data.equalsIgnoreCase(str)) {
 								contains = true;
 								map.get(key).addScore(idx, categories.get(key).get(i));
-								//System.out.println(map.get(key) + " increased");
 							}
 						}
 					}
@@ -119,7 +140,6 @@ public class Engine {
 									else if(idx == ABSTRACT) arr[ABSTRACT] = 1;
 									else arr[CLAIM] = 1;
 									map.put(category, new Occurrence(patent.getFile(), arr));
-									//System.out.println(map.get(category) + " added");
 								}
 							}
 						}
@@ -129,7 +149,10 @@ public class Engine {
 		}
 		return map;
 	}
-	
+	/**
+	 * Merges HashMap of occurrences for each patent into master index
+	 * @param map
+	 */
 	public void mergeIndex(HashMap<ArrayList<String>, Occurrence> map) {
 		for(ArrayList<String> key : map.keySet()) {
 			ArrayList<Occurrence> occs = new ArrayList<Occurrence>();
@@ -150,7 +173,11 @@ public class Engine {
 			masterIndex.put(key, occs);
 		}
 	}
-	
+	/**
+	 * Keeps occurrences sorted from greatest to least
+	 * @param occs
+	 * @return
+	 */
 	public ArrayList<Integer> insertLastOccurrence(ArrayList<Occurrence> occs) {
 		ArrayList<Integer> midpoints = new ArrayList<Integer>();
 		if(occs.size() < 2) return null;
@@ -169,7 +196,11 @@ public class Engine {
 		
 		return midpoints;
 	}
-	
+	/**
+	 * Filters str for letters only and splits hyphened words into several words
+	 * @param str
+	 * @return
+	 */
 	public ArrayList<String> getKeywords(String str) {
 		if(str == null || str.equals("") || str.equals(" ")) return null;
 		int idx = str.indexOf("-");
@@ -188,7 +219,11 @@ public class Engine {
 		}
 		return keywords;
 	}
-	
+	/**
+	 * Sets primary, secondary category and score for each patent
+	 * @param patents
+	 * @return
+	 */
 	public ArrayList<Patent> insertCategories(ArrayList<Patent> patents) {
 		for(ArrayList<String> key : masterIndex.keySet()) {
 			ArrayList<Occurrence> occList = masterIndex.get(key);
@@ -207,7 +242,12 @@ public class Engine {
 		}
 		return patents;
 	}
-	
+	/**
+	 * Exports patent-category data into a csv file
+	 * @param fileName
+	 * @param patents
+	 * @throws IOException
+	 */
 	public void export(String fileName, ArrayList<Patent> patents) throws IOException {
 		CSVWriter writer = new CSVWriter(new FileWriter(fileName));
 		String[] header = {"File", "Title", "Category", "Score", "Secondary (if tie)"};
