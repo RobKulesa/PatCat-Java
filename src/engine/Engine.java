@@ -11,13 +11,6 @@ import com.opencsv.CSVWriter;
 
 import driver.Driver;
 import structures.*;
-//12:00 - 1:00 am
-//11:30 - 3 pm
-//10:45 - 12:22 am
-//8/1 10:00pm - 11pm
-//8/5 10:00pm - 1:00 am
-//8/6 10:15am - 1:30 pm
-//8/7 1:00 am - 
 
 public class Engine {
 	private final int TITLE = 0;
