@@ -16,6 +16,8 @@ import structures.*;
 //10:45 - 12:22 am
 //8/1 10:00pm - 11pm
 //8/5 10:00pm - 1:00 am
+//8/6 10:15am - 1:30 pm
+//8/7 1:00 am - 
 
 public class Engine {
 	private final int TITLE = 0;
@@ -25,7 +27,7 @@ public class Engine {
 	HashMap<ArrayList<String>, ArrayList<Integer>> categories;
 	
 	public Engine() {
-		masterIndex = new HashMap<ArrayList<String>, ArrayList<Occurrence>>(1000,2.0f);
+		masterIndex = new HashMap<ArrayList<String>, ArrayList<Occurrence>>(20,2.0f);
 		categories = new HashMap<ArrayList<String>, ArrayList<Integer>>(20,2.0f);
 	}
 	/**
@@ -34,47 +36,20 @@ public class Engine {
 	 * @param patentFile
 	 */
 	public void makeIndex(String keywordsFile, String patentFile) throws IOException {
-		fillCategories(keywordsFile);
-		Driver.addText("fillCategories finished");
 		ArrayList<Patent> patents = loadPatents(patentFile);
-		Driver.addText("loadPatents finished");
+		Driver.addTextNew("loadPatents finished\n");
+		fillCategories(keywordsFile, patents);
+		Driver.addTextNew("fillCategories finished\n");
 		for(Patent patent : patents) {
 			mergeIndex(loadFromPatent(patent)); 
 		}
-		Driver.addText("mergeIndex finished");
+		Driver.addTextNew("mergeIndex finished\n");
 		patents = insertCategories(patents);
-		Driver.addText("insertCategories finished");
+		Driver.addTextNew("insertCategories finished\n");
 		SimpleDateFormat format = new SimpleDateFormat("MM-dd-yy.HH.mm.ss");
-		export("output" + format.format(System.currentTimeMillis()) +".csv", patents);
-		Driver.addText("export finished");
-	}
-	/**
-	 * Fills categories hash table with keywords and weights from csv file
-	 * @param fileName
-	 */
-	public void fillCategories(String fileName) throws IOException {
-		Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(new FileReader(fileName));
-		ArrayList<String> keywords = new ArrayList<String>();
-		ArrayList<Integer> weights = new ArrayList<Integer>();
-		String data;
-		for(CSVRecord record : records) {
-			Iterator<String> iterator = record.iterator();
-			while(iterator.hasNext()) {
-				data = iterator.next().toLowerCase();
-				if(data.length() > 0) {
-					if(data.matches(".*\\d.*")) {
-						weights.add(Integer.parseInt(data));
-					} else {
-						keywords.add(data);
-					}
-				}	
-			}
-			if(!weights.isEmpty()) {
-				categories.put(keywords, weights);
-				keywords = new ArrayList<String>();
-				weights = new ArrayList<Integer>();
-			}
-		}
+		String date = format.format(new Date(System.currentTimeMillis()));
+		export("output." + date +".csv", patents);
+		Driver.addTextNew("exported to output." + date +".csv\n");
 	}
 	/**
 	 * Loads patents from patents csv file and creates patent objects
@@ -90,24 +65,69 @@ public class Engine {
 			String abstractInfo = record.get("Abstract").toLowerCase();
 			String claim = record.get("Claims").toLowerCase();
 			patents.add(new Patent(file, title, abstractInfo, claim));
+			if(Driver.chckbxPatentsDebug.isSelected()) Driver.addTextNew("Added " + file + ": " + title);
 		}
 		return patents;
 	}
 	/**
-	 * Builds master index and fills with occurrence objects using {@link engine.Engine#buildMap(Patent, int, StringTokenizer, HashMap)}
+	 * Fills categories hash table with keywords and weights from csv file
+	 * @param fileName
+	 */
+	public ArrayList<Patent> fillCategories(String fileName, ArrayList<Patent> patents) throws IOException {
+		Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(new FileReader(fileName));
+		ArrayList<String> category = new ArrayList<String>();
+		ArrayList<Integer> weights = new ArrayList<Integer>();
+		String data;
+		for(CSVRecord record : records) {
+			Iterator<String> iterator = record.iterator();
+			while(iterator.hasNext()) {
+				data = iterator.next().toLowerCase();
+				if(data.length() > 0) {
+					if(data.matches(".*\\d.*")) {
+						weights.add(Integer.parseInt(data));
+					} else {
+						for(Patent patent : patents) {
+							if(patent.getCategory() == null) {
+								if(patent.getTitle().contains(data)) patent.setCategory(data);
+								if(patent.getAbstract().contains(data)) patent.setCategory(data);
+								if(patent.getClaim().contains(data)) patent.setCategory(data);
+							}	
+						}
+						category.add(data);
+					}
+				}	
+			}
+			if(!weights.isEmpty()) {
+				categories.put(category, weights);
+				if(Driver.chckbxCategoriesDebug.isSelected()) Driver.addTextNew(category + ": " + weights);
+				category = new ArrayList<String>();
+				weights = new ArrayList<Integer>();
+			}
+		}
+		return patents;
+	}
+	/**
+	 * Builds map of occurrences for each patent using {@link engine.Engine#buildMap(Patent, int, StringTokenizer, HashMap)}
 	 * @param patent
 	 * @return HashMap of occurrences
 	 */
 	public HashMap<ArrayList<String>, Occurrence> loadFromPatent(Patent patent) throws IOException {
-		HashMap<ArrayList<String>, Occurrence> map = new HashMap<ArrayList<String>, Occurrence>(500, 2.0f);
+		HashMap<ArrayList<String>, Occurrence> map = new HashMap<ArrayList<String>, Occurrence>(5, 2.0f);
 		
 		map = buildMap(patent, TITLE, new StringTokenizer(patent.getTitle()), map);
 		map = buildMap(patent, ABSTRACT, new StringTokenizer(patent.getAbstract()), map);
 		map = buildMap(patent, CLAIM, new StringTokenizer(patent.getClaim()), map);
+		if(Driver.chckbxIndexDebug.isSelected()) {
+			Driver.addText(patent.getFile() + ": {");
+			for(ArrayList<String> category : map.keySet()) {
+				Driver.addText(category.get(0) + "=" + map.get(category).scoreToString() + ", ");
+			}
+			Driver.addTextNew("}");
+		}
 		return map;
 	}
 	/**
-	 * Builds HashMap of occurrences for each patent
+	 * Builds HashMap of occurrences for each patent's title, abstract, and claim
 	 * @param patent
 	 * @param idx TITLE, ABSTRACT, or CLAIM [0, 1, 2]
 	 * @param tk StringTokenizer for patent description
@@ -230,14 +250,14 @@ public class Engine {
 			for(Occurrence o : occList) {
 				for(Patent p : patents) {
 					if(o.getFile().equals(p.getFile())) {
-						if(o.getScore() > p.getScore()) {
-							p.setCategory(key);
-							p.setScore(o.getScore());
-						} else if(o.getScore() == p.getScore()) {
-							p.setSecondary(key);
-						}
+						p.addToList(key, o.getScore());
 					}
 				}
+			}
+		}
+		if(Driver.chckbxApplyCategoriesDebug.isSelected()) {
+			for(Patent patent : patents) {
+				Driver.addTextNew(patent.toString());
 			}
 		}
 		return patents;
@@ -250,25 +270,33 @@ public class Engine {
 	 */
 	public void export(String fileName, ArrayList<Patent> patents) throws IOException {
 		CSVWriter writer = new CSVWriter(new FileWriter(fileName));
-		String[] header = {"File", "Title", "Category", "Score", "Secondary (if tie)"};
+		String[] header = {"File", "Title", "Category", "List"};
 		writer.writeNext(header);
 		for(Patent patent : patents) {
-			String file = patent.getFile(); String title = patent.getTitle(); String score = patent.getScore() + "";
-			String category = null;
-			if(patent.getCategory() != null) {
-				for(String keyword : patent.getCategory()) {
-					if(category == null) category = keyword;
-					else category = category + ", " + keyword;
+			String file = patent.getFile(); String title = patent.getTitle();
+			String category = patent.getCategory();
+			ArrayList<ArrayList<String>> sorted = new ArrayList<ArrayList<String>>();
+			for(ArrayList<String> key : patent.getList().keySet()) {
+				if(!sorted.isEmpty()) {
+					for(int i = 0; i < sorted.size(); i++) {
+						if(patent.getList().get(key) >= patent.getList().get(sorted.get(i))) {
+							sorted.add(i, key);
+							break;
+						} else if(i == sorted.size() - 1) {
+							sorted.add(key);
+							break;
+						}
+					}
+				} else {
+					sorted.add(key);
 				}
-			}	
-			String secondary = null;
-			if(patent.getSecondary() != null) {
-				for(String keyword : patent.getSecondary()) {
-					if(secondary == null) secondary = keyword;
-					else secondary = secondary + ", " + keyword;
-				}
-			}	
-			String[] line = {file, title, category, score, secondary};
+			}
+			StringBuilder builder = new StringBuilder();
+			for(ArrayList<String> key : sorted) { 
+				builder.append(key + ": " + patent.getList().get(key) + " ");
+			}
+				
+			String[] line = {file, title, category, builder.toString()};
 			writer.writeNext(line);
 		}
 		writer.close();

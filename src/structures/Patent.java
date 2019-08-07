@@ -1,6 +1,7 @@
 package structures;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 /**
  * 
  * @author Robert Kulesa
@@ -11,37 +12,24 @@ public class Patent {
 	private String title;
 	private String abstractInfo;
 	private String claim;
-	private ArrayList<String> category;
-	private ArrayList<String> secondary;
-	private int score;
+	private String category;
+	private HashMap<ArrayList<String>, Integer> list;
+	private ArrayList<ArrayList<String>> sorted;
 	
 	public Patent(String file, String title, String abstractInfo, String claim) {
 		this.file = file;
 		this.title = title;
 		this.abstractInfo = abstractInfo;
 		this.claim = claim;
-		this.score = 0;
+		this.list = new HashMap<ArrayList<String>, Integer>(20, 2.0f);
 	}
 	
-	public Patent(String file) {
-		this.file = file;
-		this.score = 0;
-	}
-	
-	public Patent() {
-		this.score = 0;
-	}
-	
-	public void setCategory(ArrayList<String> category) {
+	public void setCategory(String category) {
 		this.category = category;
 	}
 	
-	public void setSecondary(ArrayList<String> secondary) {
-		this.secondary = secondary;
-	}
-	
-	public void setScore(int score) {
-		this.score = score;
+	public void addToList(ArrayList<String> key, Integer value) {
+		this.list.put(key, value);
 	}
 	
 	public void setFile(String str) {
@@ -60,16 +48,12 @@ public class Patent {
 		this.claim = str;
 	}
 	
-	public int getScore() {
-		return this.score;
-	}
-	
-	public ArrayList<String> getCategory() {
+	public String getCategory() {
 		return this.category;
 	}
 	
-	public ArrayList<String> getSecondary() {
-		return this.secondary;
+	public Integer getScore(ArrayList<String> key) {
+		return this.list.get(key);
 	}
 	
 	public String getFile() {
@@ -88,11 +72,22 @@ public class Patent {
 		return this.claim;
 	}
 
+	public HashMap<ArrayList<String>, Integer> getList() {
+		return this.list;
+	}
+	
+	public ArrayList<ArrayList<String>> getSorted() {
+		return this.sorted;
+	}
+	
+	public void addSorted(ArrayList<String> category) {
+		this.sorted.add(category);
+	}
 	@Override
 	/**
 	 * @return Returns a String formatted patent object showing its main category, score, and secondary category
 	 */
 	public String toString() {
-		return this.file + ": " + this.category + " (" + this.score + ") (" + this.secondary + ")";
+		return this.file + ": " + this.category + " | " + this.list;
 	}
 }

@@ -1,9 +1,7 @@
 package driver;
 
-import java.awt.LayoutManager;
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
 
 import javax.swing.*;
 
@@ -20,10 +18,14 @@ public class Driver {
 	private static JTextField patentsFileField;
 	private static JTextArea consoleField;
 	private static StringBuilder builder;
+	public static JCheckBox chckbxCategoriesDebug;
+	public static JCheckBox chckbxPatentsDebug;
+	public static JCheckBox chckbxIndexDebug;
+	public static JCheckBox chckbxApplyCategoriesDebug;
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("PatCat-Java");
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    frame.setSize(705, 300);
+	    frame.setSize(682, 407);
 	    frame.setLocationRelativeTo(null);
 	    frame.getContentPane().setLayout(null);
 	    
@@ -96,16 +98,10 @@ public class Driver {
 	    frame.getContentPane().add(patentsFileField);
 	    
 	    JButton categorize = new JButton("Categorize");
-	    categorize.setBounds(48, 176, 108, 23);
+	    categorize.setBounds(48, 172, 108, 23);
 	    frame.getContentPane().add(categorize);
 	    
-	    consoleField = new JTextArea();
-	    consoleField.setEditable(false);
-	    consoleField.setBounds(250, 22, 429, 228);
-	    frame.getContentPane().add(consoleField);
-	    
 	    JLabel consoleLabel = new JLabel("Console");
-	    consoleLabel.setLabelFor(consoleField);
 	    consoleLabel.setBounds(251, 8, 46, 14);
 	    frame.getContentPane().add(consoleLabel);
 	    
@@ -123,8 +119,52 @@ public class Driver {
 				}
 	    	}
 	    });
-	    btnSaveDebug.setBounds(48, 207, 108, 23);
+	    btnSaveDebug.setBounds(48, 336, 108, 23);
 	    frame.getContentPane().add(btnSaveDebug);
+	    
+	    JScrollPane scrollPane = new JScrollPane();
+	    scrollPane.setBounds(250, 22, 408, 337);
+	    frame.getContentPane().add(scrollPane);
+	    
+	    consoleField = new JTextArea();
+	    scrollPane.setViewportView(consoleField);
+	    consoleField.setEditable(false);
+	    consoleLabel.setLabelFor(consoleField);
+	    
+	    chckbxCategoriesDebug = new JCheckBox("Show Categories Debug");
+	    chckbxCategoriesDebug.setBounds(10, 228, 146, 23);
+	    frame.getContentPane().add(chckbxCategoriesDebug);
+	    
+	    chckbxPatentsDebug = new JCheckBox("Show Patents Debug");
+	    chckbxPatentsDebug.setBounds(10, 254, 176, 23);
+	    frame.getContentPane().add(chckbxPatentsDebug);
+	    
+	    chckbxIndexDebug = new JCheckBox("Show Index Debug");
+	    chckbxIndexDebug.setBounds(10, 280, 176, 23);
+	    frame.getContentPane().add(chckbxIndexDebug);
+	    
+	    chckbxApplyCategoriesDebug = new JCheckBox("Show Apply Categories Debug");
+	    chckbxApplyCategoriesDebug.setBounds(10, 306, 176, 23);
+	    frame.getContentPane().add(chckbxApplyCategoriesDebug);
+	    
+	    JCheckBox chckbxSelectAll = new JCheckBox("Select All");
+	    chckbxSelectAll.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    		if(chckbxSelectAll.isSelected()) {
+	    			chckbxCategoriesDebug.setSelected(true);
+	    			chckbxPatentsDebug.setSelected(true);
+	    			chckbxIndexDebug.setSelected(true);
+	    			chckbxApplyCategoriesDebug.setSelected(true);
+	    		} else {
+	    			chckbxCategoriesDebug.setSelected(false);
+	    			chckbxPatentsDebug.setSelected(false);
+	    			chckbxIndexDebug.setSelected(false);
+	    			chckbxApplyCategoriesDebug.setSelected(false);
+	    		}
+	    	}
+	    });
+	    chckbxSelectAll.setBounds(10, 202, 97, 23);
+	    frame.getContentPane().add(chckbxSelectAll);
 	    
 	    categorize.addActionListener(new ActionListener() {
 	    	@Override
@@ -142,21 +182,26 @@ public class Driver {
 	    		try {
 	    			engine.makeIndex(config.getProperty("categoriesFile"), config.getProperty("patentsFile"));
 	    		} catch (IOException ex) {
-	    			addText("IOException @ engine.makeIndex, files not found?");
-	    			addText(ex.getMessage());
+	    			addTextNew("IOException @ engine.makeIndex, files not found?");
+	    			addTextNew(ex.getMessage());
 	    		}
-	    		addText("Finished");
+	    		addTextNew("Finished");
 	    	}
 	    	
 	    });
 	    frame.setVisible(true);
 	}
 	/**
-     * Add text to console
+     * Add text to console with newline
      * @param str text
      */
-    public static void addText(String str) {
+    public static void addTextNew(String str) {
     	builder.append(str + "\n");
+    	consoleField.setText(builder.toString());
+    }
+    
+    public static void addText(String str) {
+    	builder.append(str);
     	consoleField.setText(builder.toString());
     }
 }

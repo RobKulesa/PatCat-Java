@@ -1,14 +1,11 @@
 package structures;
 
-import java.util.ArrayList;
-
 import driver.Config;
 
-public class Occurrence implements Comparable {
+public class Occurrence implements Comparable<Occurrence> {
 	Config config = new Config();
 	private String patent;
 	private int[] score;
-	//
 	public final int TITLE = Integer.parseInt(config.getProperty("titleWeight"));
 	public final int ABSTRACT = Integer.parseInt(config.getProperty("abstractWeight"));
 	public final int CLAIM = Integer.parseInt(config.getProperty("claimWeight"));
@@ -20,7 +17,7 @@ public class Occurrence implements Comparable {
 	
 	@Override
 	public String toString() {
-		return "(" + this.patent + ", [" + this.getFrequency(0) + ", " + this.getFrequency(1) +  "," + this.getFrequency(3) + "])";
+		return "(" + this.patent + ", [" + this.getFrequency(0) + ", " + this.getFrequency(1) +  "," + this.getFrequency(2) + "])";
 	}
 	
 	public int getScore() {
@@ -35,13 +32,17 @@ public class Occurrence implements Comparable {
 	public String getFile() {
 		return this.patent;
 	}
+	
 	public void addScore(int idx, int score) {
 		this.score[idx] = this.score[idx] + score;
 	}
 
+	public String scoreToString() {
+		return "[" + this.getFrequency(0) + ", " + this.getFrequency(1) +  "," + this.getFrequency(2) + "]";
+	}
+	
 	@Override
-	public int compareTo(Object o) {
-		if(!(o instanceof Occurrence) || o == null) return -1;
+	public int compareTo(Occurrence o) {
 		return this.getScore() - ((Occurrence) o).getScore();
 	}
 }
