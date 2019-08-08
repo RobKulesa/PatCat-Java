@@ -17,11 +17,11 @@ public class Driver {
 	private static JTextField categoriesFileField;
 	private static JTextField patentsFileField;
 	private static JTextArea consoleField;
-	private static StringBuilder builder;
 	public static JCheckBox chckbxCategoriesDebug;
 	public static JCheckBox chckbxPatentsDebug;
 	public static JCheckBox chckbxIndexDebug;
 	public static JCheckBox chckbxApplyCategoriesDebug;
+	
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("PatCat-Java");
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -32,69 +32,75 @@ public class Driver {
 	    Config config = new Config();
 	    
 	    JLabel titleWeightLabel = new JLabel("Title Weight");
-	    titleWeightLabel.setBounds(10, 11, 57, 14);
+	    titleWeightLabel.setBounds(10, 11, 170, 14);
 	    frame.getContentPane().add(titleWeightLabel);
 	    
 	    titleWeightField = new JTextField();
+	    titleWeightField.setHorizontalAlignment(SwingConstants.RIGHT);
 	    titleWeightLabel.setLabelFor(titleWeightField);
 	    titleWeightField.setText(config.getProperty("titleWeight"));
-	    titleWeightField.setBounds(96, 8, 36, 20);
+	    titleWeightField.setBounds(190, 8, 36, 20);
 	    frame.getContentPane().add(titleWeightField);
 	    titleWeightField.setColumns(10);
 	    
 	    JLabel abstractWeightLabel = new JLabel("Abstract Weight");
-	    abstractWeightLabel.setBounds(10, 39, 78, 14);
+	    abstractWeightLabel.setBounds(10, 39, 170, 14);
 	    frame.getContentPane().add(abstractWeightLabel);
 	    
 	    abstractWeightField = new JTextField();
+	    abstractWeightField.setHorizontalAlignment(SwingConstants.RIGHT);
 	    abstractWeightLabel.setLabelFor(abstractWeightField);
 	    abstractWeightField.setText(config.getProperty("abstractWeight"));
 	    abstractWeightField.setColumns(10);
-	    abstractWeightField.setBounds(96, 36, 36, 20);
+	    abstractWeightField.setBounds(190, 36, 36, 20);
 	    frame.getContentPane().add(abstractWeightField);
 	    
 	    JLabel preambleWeightLabel = new JLabel("Preamble Weight");
-	    preambleWeightLabel.setBounds(10, 67, 87, 14);
+	    preambleWeightLabel.setBounds(10, 67, 170, 14);
 	    frame.getContentPane().add(preambleWeightLabel);
 	    
 	    preambleWeightField = new JTextField();
+	    preambleWeightField.setHorizontalAlignment(SwingConstants.RIGHT);
 	    preambleWeightLabel.setLabelFor(preambleWeightField);
 	    preambleWeightField.setText(config.getProperty("preambleWeight"));
 	    preambleWeightField.setColumns(10);
-	    preambleWeightField.setBounds(96, 64, 36, 20);
+	    preambleWeightField.setBounds(190, 64, 36, 20);
 	    frame.getContentPane().add(preambleWeightField);
 	    
 	    JLabel claimWeightLabel = new JLabel("Claim Weight");
-	    claimWeightLabel.setBounds(10, 95, 78, 14);
+	    claimWeightLabel.setBounds(10, 95, 170, 14);
 	    frame.getContentPane().add(claimWeightLabel);
 	    
 	    claimWeightField = new JTextField();
+	    claimWeightField.setHorizontalAlignment(SwingConstants.RIGHT);
 	    claimWeightLabel.setLabelFor(claimWeightField);
 	    claimWeightField.setText(config.getProperty("claimWeight"));
 	    claimWeightField.setColumns(10);
-	    claimWeightField.setBounds(96, 92, 36, 20);
+	    claimWeightField.setBounds(190, 92, 36, 20);
 	    frame.getContentPane().add(claimWeightField);
 	    
 	    JLabel categoriesFileLabel = new JLabel("Categories File");
-	    categoriesFileLabel.setBounds(10, 123, 78, 14);
+	    categoriesFileLabel.setBounds(10, 123, 88, 14);
 	    frame.getContentPane().add(categoriesFileLabel);
 	    
 	    categoriesFileField = new JTextField();
+	    categoriesFileField.setHorizontalAlignment(SwingConstants.RIGHT);
 	    categoriesFileLabel.setLabelFor(categoriesFileField);
 	    categoriesFileField.setText(config.getProperty("categoriesFile"));
 	    categoriesFileField.setColumns(10);
-	    categoriesFileField.setBounds(96, 120, 130, 20);
+	    categoriesFileField.setBounds(108, 120, 118, 20);
 	    frame.getContentPane().add(categoriesFileField);
 	    
 	    JLabel patentsFileLabel = new JLabel("Patents File");
-	    patentsFileLabel.setBounds(10, 151, 78, 14);
+	    patentsFileLabel.setBounds(10, 151, 88, 14);
 	    frame.getContentPane().add(patentsFileLabel);
 	    
 	    patentsFileField = new JTextField();
+	    patentsFileField.setHorizontalAlignment(SwingConstants.RIGHT);
 	    patentsFileLabel.setLabelFor(patentsFileField);
 	    patentsFileField.setText(config.getProperty("patentsFile"));
 	    patentsFileField.setColumns(10);
-	    patentsFileField.setBounds(96, 148, 130, 20);
+	    patentsFileField.setBounds(108, 148, 118, 20);
 	    frame.getContentPane().add(patentsFileField);
 	    
 	    JButton categorize = new JButton("Categorize");
@@ -130,21 +136,21 @@ public class Driver {
 	    scrollPane.setViewportView(consoleField);
 	    consoleField.setEditable(false);
 	    consoleLabel.setLabelFor(consoleField);
-	    
+	   
 	    chckbxCategoriesDebug = new JCheckBox("Show Categories Debug");
-	    chckbxCategoriesDebug.setBounds(10, 228, 146, 23);
+	    chckbxCategoriesDebug.setBounds(10, 228, 234, 23);
 	    frame.getContentPane().add(chckbxCategoriesDebug);
 	    
 	    chckbxPatentsDebug = new JCheckBox("Show Patents Debug");
-	    chckbxPatentsDebug.setBounds(10, 254, 176, 23);
+	    chckbxPatentsDebug.setBounds(10, 254, 234, 23);
 	    frame.getContentPane().add(chckbxPatentsDebug);
 	    
 	    chckbxIndexDebug = new JCheckBox("Show Index Debug");
-	    chckbxIndexDebug.setBounds(10, 280, 176, 23);
+	    chckbxIndexDebug.setBounds(10, 280, 234, 23);
 	    frame.getContentPane().add(chckbxIndexDebug);
 	    
 	    chckbxApplyCategoriesDebug = new JCheckBox("Show Apply Categories Debug");
-	    chckbxApplyCategoriesDebug.setBounds(10, 306, 176, 23);
+	    chckbxApplyCategoriesDebug.setBounds(10, 306, 234, 23);
 	    frame.getContentPane().add(chckbxApplyCategoriesDebug);
 	    
 	    JCheckBox chckbxSelectAll = new JCheckBox("Select All");
@@ -163,13 +169,12 @@ public class Driver {
 	    		}
 	    	}
 	    });
-	    chckbxSelectAll.setBounds(10, 202, 97, 23);
+	    chckbxSelectAll.setBounds(10, 202, 234, 23);
 	    frame.getContentPane().add(chckbxSelectAll);
 	    
 	    categorize.addActionListener(new ActionListener() {
 	    	@Override
 	    	public void actionPerformed(ActionEvent e) {
-	    		builder = new StringBuilder();
 	    		consoleField.setText(null);
 	    		Engine engine = new Engine();
 	    		config.setProperty("titleWeight", titleWeightField.getText());
@@ -196,12 +201,10 @@ public class Driver {
      * @param str text
      */
     public static void addTextNew(String str) {
-    	builder.append(str + "\n");
-    	consoleField.setText(builder.toString());
+    	consoleField.append(str + "\n");
     }
     
     public static void addText(String str) {
-    	builder.append(str);
-    	consoleField.setText(builder.toString());
+    	consoleField.append(str);
     }
 }

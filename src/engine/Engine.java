@@ -29,20 +29,24 @@ public class Engine {
 	 * @param patentFile
 	 */
 	public void makeIndex(String keywordsFile, String patentFile) throws IOException {
+		Driver.addTextNew("loadPatents started");
 		ArrayList<Patent> patents = loadPatents(patentFile);
-		Driver.addTextNew("loadPatents finished\n");
+		Driver.addTextNew("loadPatents finished");
+		Driver.addTextNew("fillCategories started");
 		fillCategories(keywordsFile, patents);
-		Driver.addTextNew("fillCategories finished\n");
+		Driver.addTextNew("fillCategories finished");
+		Driver.addTextNew("mergeIndex started");
 		for(Patent patent : patents) {
 			mergeIndex(loadFromPatent(patent)); 
 		}
-		Driver.addTextNew("mergeIndex finished\n");
+		Driver.addTextNew("mergeIndex finished");
+		Driver.addTextNew("insertCategories started");
 		patents = insertCategories(patents);
-		Driver.addTextNew("insertCategories finished\n");
+		Driver.addTextNew("insertCategories finished");
 		SimpleDateFormat format = new SimpleDateFormat("MM-dd-yy.HH.mm.ss");
 		String date = format.format(new Date(System.currentTimeMillis()));
 		export("output." + date +".csv", patents);
-		Driver.addTextNew("exported to output." + date +".csv\n");
+		Driver.addTextNew("exported to output." + date +".csv");
 	}
 	/**
 	 * Loads patents from patents csv file and creates patent objects
@@ -51,14 +55,17 @@ public class Engine {
 	 */
 	public ArrayList<Patent> loadPatents(String fileName) throws IOException {
 		ArrayList<Patent> patents = new ArrayList<Patent>();
-		Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new FileReader(fileName));
+		CSVFormat format = CSVFormat.DEFAULT.withCommentMarker('#');
+		Iterable<CSVRecord> records = format.withFirstRecordAsHeader().parse(new FileReader(fileName));
 		for(CSVRecord record: records) {
-			String file = record.get("Publication Number"); 
-			String title = record.get("Title").toLowerCase();
-			String abstractInfo = record.get("Abstract").toLowerCase();
-			String claim = record.get("Claims").toLowerCase();
-			patents.add(new Patent(file, title, abstractInfo, claim));
-			if(Driver.chckbxPatentsDebug.isSelected()) Driver.addTextNew("Added " + file + ": " + title);
+			if(!record.hasComment()) {
+				String file = record.get(0); 
+				String title = record.get(1).toLowerCase();
+				String abstractInfo = record.get(2).toLowerCase();
+				String claim = record.get(3).toLowerCase();
+				patents.add(new Patent(file, title, abstractInfo, claim));
+				if(Driver.chckbxPatentsDebug.isSelected()) Driver.addTextNew("Added " + file + ": " + title);
+			}
 		}
 		return patents;
 	}
@@ -67,35 +74,38 @@ public class Engine {
 	 * @param fileName
 	 */
 	public ArrayList<Patent> fillCategories(String fileName, ArrayList<Patent> patents) throws IOException {
-		Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(new FileReader(fileName));
+		CSVFormat format = CSVFormat.DEFAULT.withCommentMarker('#');
+		Iterable<CSVRecord> records = format.parse(new FileReader(fileName));
 		ArrayList<String> category = new ArrayList<String>();
 		ArrayList<Integer> weights = new ArrayList<Integer>();
 		String data;
 		for(CSVRecord record : records) {
-			Iterator<String> iterator = record.iterator();
-			while(iterator.hasNext()) {
-				data = iterator.next().toLowerCase();
-				if(data.length() > 0) {
-					if(data.matches(".*\\d.*")) {
-						weights.add(Integer.parseInt(data));
-					} else {
-						for(Patent patent : patents) {
-							if(patent.getCategory() == null) {
-								if(patent.getTitle().contains(data)) patent.setCategory(data);
-								if(patent.getAbstract().contains(data)) patent.setCategory(data);
-								if(patent.getClaim().contains(data)) patent.setCategory(data);
-							}	
+			if(!record.hasComment()) {
+				Iterator<String> iterator = record.iterator();
+				while(iterator.hasNext()) {
+					data = iterator.next().toLowerCase();
+					if(data.length() > 0) {
+						if(data.matches(".*\\d.*")) {
+							weights.add(Integer.parseInt(data));
+						} else {
+							for(Patent patent : patents) {
+								if(patent.getCategory() == null) {
+									if(patent.getTitle().contains(" " + data + " ")) patent.setCategory(data);
+									if(patent.getAbstract().contains(" " + data + " ")) patent.setCategory(data);
+									if(patent.getClaim().contains(" " + data + " ")) patent.setCategory(data);
+								}	
+							}
+							category.add(data);
 						}
-						category.add(data);
-					}
-				}	
-			}
-			if(!weights.isEmpty()) {
-				categories.put(category, weights);
-				if(Driver.chckbxCategoriesDebug.isSelected()) Driver.addTextNew(category + ": " + weights);
-				category = new ArrayList<String>();
-				weights = new ArrayList<Integer>();
-			}
+					}	
+				}
+				if(!weights.isEmpty()) {
+					categories.put(category, weights);
+					if(Driver.chckbxCategoriesDebug.isSelected()) Driver.addTextNew(category + ": " + weights);
+					category = new ArrayList<String>();
+					weights = new ArrayList<Integer>();
+				}
+			}	
 		}
 		return patents;
 	}
