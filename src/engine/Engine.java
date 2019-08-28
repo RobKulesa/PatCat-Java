@@ -15,9 +15,10 @@ import structures.*;
 public class Engine {
 	private final int TITLE = 0;
 	private final int ABSTRACT = 1;
-	private final int CLAIM = 2;
+	private final int PREAMBLE = 2;
+	private final int CLAIM = 3;
 	HashMap<ArrayList<String>, ArrayList<Occurrence>> masterIndex;
-	HashMap<ArrayList<String>, ArrayList<Integer>> categories;
+	public HashMap<ArrayList<String>, ArrayList<Integer>> categories;
 	
 	public Engine() {
 		masterIndex = new HashMap<ArrayList<String>, ArrayList<Occurrence>>(20,2.0f);
@@ -43,7 +44,7 @@ public class Engine {
 		Driver.addTextNew("insertCategories started");
 		patents = insertCategories(patents);
 		Driver.addTextNew("insertCategories finished");
-		SimpleDateFormat format = new SimpleDateFormat("MM-dd-yy.HH.mm.ss");
+		SimpleDateFormat format = new SimpleDateFormat("MM-dd-yy..HH.mm.ss");
 		String date = format.format(new Date(System.currentTimeMillis()));
 		export("output." + date +".csv", patents);
 		Driver.addTextNew("exported to output." + date +".csv");
@@ -62,9 +63,18 @@ public class Engine {
 				String file = record.get(0); 
 				String title = record.get(1).toLowerCase();
 				String abstractInfo = record.get(2).toLowerCase();
+				String preamble = null;
 				String claim = record.get(3).toLowerCase();
-				patents.add(new Patent(file, title, abstractInfo, claim));
-				if(Driver.chckbxPatentsDebug.isSelected()) Driver.addTextNew("Added " + file + ": " + title);
+				try {
+					String[] totalClaim = record.get(3).toLowerCase().split(":", 2);
+					preamble = totalClaim[0];
+					claim = totalClaim[1];
+				} catch(ArrayIndexOutOfBoundsException e) {
+					preamble = "";
+					claim = record.get(3).toLowerCase();
+				}
+				patents.add(new Patent(file, title, abstractInfo, preamble, claim));
+				if(Driver.chckbxPatentsDebug.isSelected()) Driver.addTextNew("Added " + file + ": " + title + "  |  " + abstractInfo + "  ||  " + preamble + "  |||  " + claim);
 			}
 		}
 		return patents;
@@ -88,18 +98,26 @@ public class Engine {
 						if(data.matches(".*\\d.*")) {
 							weights.add(Integer.parseInt(data));
 						} else {
-							for(Patent patent : patents) {
-								if(patent.getCategory() == null) {
-									if(patent.getTitle().contains(" " + data + " ")) patent.setCategory(data);
-									if(patent.getAbstract().contains(" " + data + " ")) patent.setCategory(data);
-									if(patent.getClaim().contains(" " + data + " ")) patent.setCategory(data);
-								}	
-							}
 							category.add(data);
 						}
-					}	
+					} 
 				}
-				if(!weights.isEmpty()) {
+				if(!weights.isEmpty() && category.size() == weights.size()) {
+					String keyword;
+					for(Patent patent : patents) {
+						if(patent.getCategory() == null) {
+							for(int i = 0; i < category.size(); i++) {
+								if(weights.get(i) == 0) continue;
+								keyword = category.get(i);
+								for(int j = 0; j < 4; j++) {
+									if(patent.getInfo(j).contains(keyword)) {
+										patent.setCategory(category.get(0));
+										break;
+									}
+								}
+							}
+						}
+					}
 					categories.put(category, weights);
 					if(Driver.chckbxCategoriesDebug.isSelected()) Driver.addTextNew(category + ": " + weights);
 					category = new ArrayList<String>();
@@ -116,10 +134,33 @@ public class Engine {
 	 */
 	public HashMap<ArrayList<String>, Occurrence> loadFromPatent(Patent patent) throws IOException {
 		HashMap<ArrayList<String>, Occurrence> map = new HashMap<ArrayList<String>, Occurrence>(5, 2.0f);
-		
-		map = buildMap(patent, TITLE, new StringTokenizer(patent.getTitle()), map);
-		map = buildMap(patent, ABSTRACT, new StringTokenizer(patent.getAbstract()), map);
-		map = buildMap(patent, CLAIM, new StringTokenizer(patent.getClaim()), map);
+		for(ArrayList<String> category : categories.keySet()) {
+			for(int keyWordIndex = 0; keyWordIndex < category.size(); keyWordIndex++) {
+				String keyWord = category.get(keyWordIndex);
+				boolean firstRun = true;
+				for(int idx = 0; idx < 4; idx++) {
+					int indexOfKey = patent.getInfo(idx).indexOf(keyWord);
+					while(indexOfKey >= 0) {
+						patent.setInfo(idx, patent.getInfo(idx).replaceFirst(keyWord, ""));
+						if(categories.get(category).get(keyWordIndex) > 0) {
+							if(firstRun) {
+								int[] arr = {0, 0, 0, 0};
+								if(idx == TITLE) arr[TITLE] = 1;
+								else if(idx == ABSTRACT) arr[ABSTRACT] = 1;
+								else if(idx == PREAMBLE) arr[PREAMBLE] = 1;
+								else arr[CLAIM] = 1;
+								map.put(category, new Occurrence(patent.getFile(), arr));
+								firstRun = false;
+							} else {
+								map.get(category).addScore(idx, categories.get(category).get(keyWordIndex));
+							}
+						}
+						indexOfKey = patent.getInfo(idx).indexOf(keyWord);
+					}
+				}
+			}
+			patent.resetInfo();
+		}
 		if(Driver.chckbxIndexDebug.isSelected()) {
 			Driver.addText(patent.getFile() + ": {");
 			for(ArrayList<String> category : map.keySet()) {
@@ -129,49 +170,7 @@ public class Engine {
 		}
 		return map;
 	}
-	/**
-	 * Builds HashMap of occurrences for each patent's title, abstract, and claim
-	 * @param patent
-	 * @param idx TITLE, ABSTRACT, or CLAIM [0, 1, 2]
-	 * @param tk StringTokenizer for patent description
-	 * @param map 
-	 * @return
-	 */
-	public HashMap<ArrayList<String>, Occurrence> buildMap(Patent patent, int idx, StringTokenizer tk, HashMap<ArrayList<String>, Occurrence> map) {
-		ArrayList<String> keywords;
-		while(tk.hasMoreTokens()) {
-			keywords = getKeywords(tk.nextToken());
-			for(String data : keywords) {
-				if(data != null && data.length() > 2) {
-					boolean contains = false;
-					for(ArrayList<String> key : map.keySet()) {
-						for(int i = 0; i < key.size(); i++) {
-							String str = key.get(i);
-							if(data.equalsIgnoreCase(str)) {
-								contains = true;
-								map.get(key).addScore(idx, categories.get(key).get(i));
-							}
-						}
-					}
-					if(!contains) {
-						for(ArrayList<String> category : categories.keySet()) {
-							for(int i = 0; i < category.size(); i++) {
-								String str = category.get(i);
-								if(data.equalsIgnoreCase(str) && categories.get(category).get(i) > 0) {
-									int[] arr = {0, 0, 0};
-									if(idx == TITLE) arr[TITLE] = 1;
-									else if(idx == ABSTRACT) arr[ABSTRACT] = 1;
-									else arr[CLAIM] = 1;
-									map.put(category, new Occurrence(patent.getFile(), arr));
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		return map;
-	}
+	
 	/**
 	 * Merges HashMap of occurrences for each patent into master index
 	 * @param map
@@ -219,29 +218,7 @@ public class Engine {
 		
 		return midpoints;
 	}
-	/**
-	 * Filters str for letters only and splits hyphened words into several words
-	 * @param str
-	 * @return
-	 */
-	public ArrayList<String> getKeywords(String str) {
-		if(str == null || str.equals("") || str.equals(" ")) return null;
-		int idx = str.indexOf("-");
-		ArrayList<String> keywords = new ArrayList<String>();
-		if(idx == 0) keywords.add(str.substring(1));
-		else if(idx == str.length() - 1) keywords.add(str.substring(0, str.length() - 1));
-		else if(idx > 1) {
-			keywords.add(str.substring(0, idx));
-			keywords.add(str.substring(idx + 1));
-		} else {
-			keywords.add(str);
-		}
-			
-		for(int i = 0; i < keywords.size(); i++) {
-			keywords.add(keywords.remove(i).replaceAll("[^a-z]", ""));
-		}
-		return keywords;
-	}
+
 	/**
 	 * Sets primary, secondary category and score for each patent
 	 * @param patents

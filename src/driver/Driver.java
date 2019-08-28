@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import javax.swing.*;
 
 import engine.Engine;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -196,6 +197,7 @@ public class Driver {
 	    });
 	    frame.setVisible(true);
 	}
+	
 	/**
      * Add text to console with newline
      * @param str text
