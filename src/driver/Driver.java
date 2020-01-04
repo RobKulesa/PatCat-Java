@@ -9,7 +9,12 @@ import engine.Engine;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+/**
+ * Contains the GUI and runs events on button presses
+ * 
+ * @author Robert Kulesa
+ *
+ */
 public class Driver {
 	private static JTextField titleWeightField;
 	private static JTextField abstractWeightField;

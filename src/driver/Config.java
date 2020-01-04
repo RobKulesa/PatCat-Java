@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.*;
 /**
+ * Class for the configuration file
  *
  * @author Robert Kulesa
  *
@@ -18,11 +19,6 @@ public class Config {
 			e.printStackTrace();
 		} 
 	}
-	/**
-	 * 
-	 * @param key
-	 * @return configured property
-	 */
 	public String getProperty(String key) {
 		return this.config.getProperty(key);
 	}
