@@ -119,12 +119,14 @@ public class Engine {
 				if(category.size() != weights.size()) throw new IOException("Category and weight size do not match in keyword file");
 				categories.put(category, weights);
 				if(Driver.chckbxCategoriesDebug.isSelected()) Driver.addTextNew(category + ": " + weights);
-				for(int i = 0; i < category.size(); i++) {
-					if(weights.get(i) == 0) continue;
-					for(Patent patent : patents) {
-						if(patent.contains(category.get(i)) != -1 && patent.getCategory() == null) {
-							patent.setCategory(category.get(0));
-							if(Driver.chckbxCategoriesDebug.isSelected()) Driver.addTextNew(patent.getFile() + ": " + patent.getCategory());
+				if(!Driver.chckbxScorebasedCategorizing.isSelected()) {
+					for(int i = 0; i < category.size(); i++) {
+						if(weights.get(i) == 0) continue;
+						for(Patent patent : patents) {
+							if(patent.contains(category.get(i)) != -1 && patent.getCategory() == null) {
+								patent.setCategory(category.get(0));
+								if(Driver.chckbxCategoriesDebug.isSelected()) Driver.addTextNew(patent.getFile() + ": " + patent.getCategory());
+							}
 						}
 					}
 				}
@@ -190,16 +192,17 @@ public class Engine {
 		String[] header = {"File", "Title", "Category", "List"};
 		writer.writeNext(header);
 		for(Patent patent : patents) {
-			String file = patent.getFile(); String title = patent.getTitle();
-			String category = patent.getCategory();	
-			String list = masterIndex.get(patent).toString();
-			if(list.length() > 2) {
-				list = list.substring(1, list.length() - 1);
-			} else {
-				list = "";
+			if(Driver.chckbxScorebasedCategorizing.isSelected() && !masterIndex.get(patent).isEmpty()) {
+				patent.setCategory(masterIndex.get(patent).get(0).getCategory().get(0));
 			}
-			String[] line = {file, title, category, list};
-			writer.writeNext(line);
+			
+			ArrayList<String> line = new ArrayList<String>();
+			line.add(patent.getFile()); line.add(patent.getTitle()); line.add(patent.getCategory());
+			for(Occurrence o : masterIndex.get(patent)) {
+				line.add(o.getCategory().get(0) + ": " + o.getScore());
+			}
+			String[] nextLine = new String[0];
+			writer.writeNext(line.toArray(nextLine));
 		}
 		writer.close();
 	}

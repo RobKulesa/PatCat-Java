@@ -27,11 +27,12 @@ public class Driver {
 	public static JCheckBox chckbxPatentsDebug;
 	public static JCheckBox chckbxIndexDebug;
 	public static JCheckBox chckbxApplyCategoriesDebug;
+	public static JCheckBox chckbxScorebasedCategorizing;
 	
 	public static void main(String[] args) {
 		JFrame frame = new JFrame("PatCat-Java");
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    frame.setSize(682, 407);
+	    frame.setSize(682, 437);
 	    frame.setLocationRelativeTo(null);
 	    frame.getContentPane().setLayout(null);
 	    
@@ -110,7 +111,7 @@ public class Driver {
 	    frame.getContentPane().add(patentsFileField);
 	    
 	    JButton categorize = new JButton("Categorize");
-	    categorize.setBounds(48, 172, 108, 23);
+	    categorize.setBounds(48, 202, 108, 23);
 	    frame.getContentPane().add(categorize);
 	    
 	    JLabel consoleLabel = new JLabel("Console");
@@ -131,32 +132,32 @@ public class Driver {
 				}
 	    	}
 	    });
-	    btnSaveDebug.setBounds(48, 336, 108, 23);
+	    btnSaveDebug.setBounds(48, 366, 108, 23);
 	    frame.getContentPane().add(btnSaveDebug);
 	    
 	    JScrollPane scrollPane = new JScrollPane();
-	    scrollPane.setBounds(250, 22, 408, 337);
+	    scrollPane.setBounds(251, 22, 407, 363);
 	    frame.getContentPane().add(scrollPane);
 	    
 	    consoleField = new JTextArea();
-	    scrollPane.setViewportView(consoleField);
 	    consoleField.setEditable(false);
+	    scrollPane.setViewportView(consoleField);
 	    consoleLabel.setLabelFor(consoleField);
 	   
 	    chckbxCategoriesDebug = new JCheckBox("Show Categories Debug");
-	    chckbxCategoriesDebug.setBounds(10, 228, 234, 23);
+	    chckbxCategoriesDebug.setBounds(10, 258, 234, 23);
 	    frame.getContentPane().add(chckbxCategoriesDebug);
 	    
 	    chckbxPatentsDebug = new JCheckBox("Show Patents Debug");
-	    chckbxPatentsDebug.setBounds(10, 254, 234, 23);
+	    chckbxPatentsDebug.setBounds(10, 284, 234, 23);
 	    frame.getContentPane().add(chckbxPatentsDebug);
 	    
 	    chckbxIndexDebug = new JCheckBox("Show Index Debug");
-	    chckbxIndexDebug.setBounds(10, 280, 234, 23);
+	    chckbxIndexDebug.setBounds(10, 310, 234, 23);
 	    frame.getContentPane().add(chckbxIndexDebug);
 	    
 	    chckbxApplyCategoriesDebug = new JCheckBox("Show Apply Categories Debug");
-	    chckbxApplyCategoriesDebug.setBounds(10, 306, 234, 23);
+	    chckbxApplyCategoriesDebug.setBounds(10, 336, 234, 23);
 	    frame.getContentPane().add(chckbxApplyCategoriesDebug);
 	    
 	    JCheckBox chckbxSelectAll = new JCheckBox("Select All");
@@ -175,8 +176,12 @@ public class Driver {
 	    		}
 	    	}
 	    });
-	    chckbxSelectAll.setBounds(10, 202, 234, 23);
+	    chckbxSelectAll.setBounds(10, 232, 234, 23);
 	    frame.getContentPane().add(chckbxSelectAll);
+	    
+	    chckbxScorebasedCategorizing = new JCheckBox("Score-Based Categorizing");
+	    chckbxScorebasedCategorizing.setBounds(10, 172, 171, 23);
+	    frame.getContentPane().add(chckbxScorebasedCategorizing);
 	    
 	    categorize.addActionListener(new ActionListener() {
 	    	@Override
@@ -191,6 +196,7 @@ public class Driver {
 	    		config.setProperty("patentsFile", patentsFileField.getText());
 	    		
 	    		try {
+	    			addTextNew("Starting...");
 	    			engine.makeIndex(config.getProperty("categoriesFile"), config.getProperty("patentsFile"));
 	    		} catch (IOException ex) {
 	    			addTextNew("IOException @ engine.makeIndex, files not found?");
